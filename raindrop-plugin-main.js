@@ -1,0 +1,692 @@
+const { Plugin, PluginSettingTab, Setting, Notice } = require('obsidian');
+
+class RaindropPlugin extends Plugin {
+  constructor() {
+    super(...arguments);
+    this.cache = new Map();
+    this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+  }
+
+  async onload() {
+    console.log('Loading Raindrop.io Plugin');
+    
+    // Load settings first
+    await this.loadSettings();
+    
+    // Register code block processors
+    this.registerMarkdownCodeBlockProcessor('raindrop', this.processRaindropCodeBlock.bind(this));
+    this.registerMarkdownCodeBlockProcessor('raindrop-search', this.processRaindropSearchCodeBlock.bind(this));
+    
+    // Register inline link processor
+    this.registerMarkdownPostProcessor(this.processInlineLinks.bind(this));
+    
+    // Add plugin settings
+    this.addSettingTab(new RaindropSettingTab(this.app, this));
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, {
+      apiToken: '',
+      defaultLayout: 'card',
+      showCoverImages: true,
+      showTags: true,
+      showExcerpts: true,
+      showDomain: true,
+      gridColumns: 2,
+      itemsPerPage: 20
+    }, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
+
+  async processRaindropCodeBlock(source, el, ctx) {
+    try {
+      const config = this.parseCodeBlockConfig(source);
+      const data = await this.fetchRaindropData(config);
+      this.renderRaindropData(el, data, config);
+    } catch (error) {
+      this.renderError(el, error.message);
+    }
+  }
+
+  async processRaindropSearchCodeBlock(source, el, ctx) {
+    try {
+      const config = this.parseSearchCodeBlockConfig(source);
+      this.renderSearchInterface(el, config);
+    } catch (error) {
+      this.renderError(el, error.message);
+    }
+  }
+
+  parseCodeBlockConfig(source) {
+    const config = {};
+    const lines = source.split('\n').filter(line => line.trim());
+    
+    for (const line of lines) {
+      const [key, value] = line.split(':').map(s => s.trim());
+      if (key && value) {
+        config[key] = value;
+      }
+    }
+    
+    // Set defaults
+    config.layout = config.layout || this.settings.defaultLayout;
+    config.page = config.page || 0;
+    config.perpage = config.perpage || this.settings.itemsPerPage;
+    
+    return config;
+  }
+
+  parseSearchCodeBlockConfig(source) {
+    const config = { type: 'search' };
+    const lines = source.split('\n').filter(line => line.trim());
+    
+    for (const line of lines) {
+      const [key, value] = line.split(':').map(s => s.trim());
+      if (key && value) {
+        config[key] = value;
+      }
+    }
+    
+    config.layout = config.layout || this.settings.defaultLayout;
+    config.perpage = config.perpage || this.settings.itemsPerPage;
+    
+    return config;
+  }
+
+  async processInlineLinks(el, ctx) {
+    const inlineLinks = el.querySelectorAll('a[href^="raindrop:"]');
+    
+    for (const link of inlineLinks) {
+      const href = link.getAttribute('href');
+      try {
+        const config = this.parseInlineLink(href);
+        const data = await this.fetchRaindropData(config);
+        
+        const container = document.createElement('div');
+        container.className = 'raindrop-inline-container';
+        this.renderRaindropData(container, data, config);
+        
+        link.parentNode.replaceChild(container, link);
+      } catch (error) {
+        this.renderError(link, error.message);
+      }
+    }
+  }
+
+  parseInlineLink(href) {
+    // Parse: raindrop:collection/123 or raindrop:bookmarks or raindrop:user
+    const parts = href.replace('raindrop:', '').split('/');
+    
+    if (parts.length === 0) {
+      throw new Error('Invalid Raindrop link format');
+    }
+    
+    const config = {
+      layout: 'card',
+      perpage: 10
+    };
+    
+    if (parts[0] === 'bookmarks') {
+      config.type = 'bookmarks';
+      config.collection = parts[1] || 0; // 0 = all bookmarks
+    } else if (parts[0] === 'collections') {
+      config.type = 'collections';
+    } else if (parts[0] === 'user') {
+      config.type = 'user';
+    } else if (parts[0] === 'collection') {
+      config.type = 'bookmarks';
+      config.collection = parts[1] || 0;
+    }
+    
+    return config;
+  }
+
+  async fetchRaindropData(config) {
+    if (!this.settings.apiToken) {
+      throw new Error('API Token is required. Please set it in plugin settings.');
+    }
+
+    const cacheKey = JSON.stringify(config);
+    const cached = this.cache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+      return cached.data;
+    }
+    
+    let url;
+    const headers = {
+      'Authorization': `Bearer ${this.settings.apiToken}`,
+      'Content-Type': 'application/json'
+    };
+    
+    if (config.type === 'collections') {
+      url = 'https://api.raindrop.io/rest/v1/collections';
+    } else if (config.type === 'user') {
+      url = 'https://api.raindrop.io/rest/v1/user';
+    } else if (config.type === 'search') {
+      const searchParams = new URLSearchParams({
+        search: config.search || '',
+        page: config.page || 0,
+        perpage: config.perpage || this.settings.itemsPerPage
+      });
+      url = `https://api.raindrop.io/rest/v1/raindrops/0?${searchParams}`;
+    } else {
+      // Default to bookmarks
+      const collectionId = config.collection || 0;
+      const searchParams = new URLSearchParams({
+        page: config.page || 0,
+        perpage: config.perpage || this.settings.itemsPerPage
+      });
+      
+      if (config.search) {
+        searchParams.append('search', config.search);
+      }
+      
+      url = `https://api.raindrop.io/rest/v1/raindrops/${collectionId}?${searchParams}`;
+    }
+    
+    const response = await fetch(url, { headers });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Invalid API Token. Please check your settings.');
+      }
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    this.cache.set(cacheKey, {
+      data: result,
+      timestamp: Date.now()
+    });
+    
+    return result;
+  }
+
+  renderSearchInterface(el, config) {
+    el.empty();
+    el.className = 'raindrop-search-container';
+    
+    // Create search input
+    const searchDiv = document.createElement('div');
+    searchDiv.className = 'raindrop-search-input-container';
+    
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.className = 'raindrop-search-input';
+    searchInput.placeholder = 'Search bookmarks...';
+    
+    searchDiv.appendChild(searchInput);
+    el.appendChild(searchDiv);
+    
+    // Create results container
+    const resultsDiv = document.createElement('div');
+    resultsDiv.className = 'raindrop-search-results';
+    el.appendChild(resultsDiv);
+    
+    // Add event listeners
+    let searchTimeout;
+    
+    const performSearch = async () => {
+      const searchTerm = searchInput.value.trim();
+      
+      if (searchTerm.length < 2) {
+        resultsDiv.innerHTML = '<div class="raindrop-search-message">Type at least 2 characters to search...</div>';
+        return;
+      }
+      
+      try {
+        resultsDiv.innerHTML = '<div class="raindrop-search-loading">Searching...</div>';
+        
+        const searchConfig = {
+          ...config,
+          type: 'search',
+          search: searchTerm,
+          page: 0,
+          perpage: 20
+        };
+        
+        const data = await this.fetchRaindropData(searchConfig);
+        this.renderBookmarks(resultsDiv, data.items, config);
+        
+      } catch (error) {
+        this.renderError(resultsDiv, error.message);
+      }
+    };
+    
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(performSearch, 300);
+    });
+    
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
+  }
+
+  renderRaindropData(el, data, config) {
+    el.empty();
+    el.className = 'raindrop-container';
+    
+    if (config.type === 'collections') {
+      this.renderCollections(el, data.items, config);
+    } else if (config.type === 'user') {
+      this.renderUserInfo(el, data.user);
+    } else {
+      // Default to bookmarks
+      this.renderBookmarks(el, data.items, config);
+    }
+  }
+
+  renderCollections(el, collections, config) {
+    if (config.layout === 'table') {
+      this.renderCollectionsTable(el, collections);
+    } else {
+      this.renderCollectionsGrid(el, collections);
+    }
+  }
+
+  renderCollectionsGrid(el, collections) {
+    const gridDiv = document.createElement('div');
+    gridDiv.className = 'raindrop-cards-grid';
+    gridDiv.style.setProperty('--raindrop-grid-columns', this.settings.gridColumns);
+    
+    collections.forEach(collection => {
+      const cardDiv = document.createElement('div');
+      cardDiv.className = 'raindrop-collection-card';
+      
+      if (this.settings.showCoverImages && collection.cover && collection.cover.length > 0) {
+        const img = document.createElement('img');
+        img.src = collection.cover[0];
+        img.alt = collection.title;
+        img.className = 'collection-cover';
+        cardDiv.appendChild(img);
+      }
+      
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'collection-info';
+      
+      const titleElement = document.createElement('h4');
+      titleElement.textContent = collection.title;
+      infoDiv.appendChild(titleElement);
+      
+      const countElement = document.createElement('div');
+      countElement.className = 'collection-count';
+      countElement.textContent = `${collection.count} bookmarks`;
+      infoDiv.appendChild(countElement);
+      
+      if (collection.description) {
+        const descElement = document.createElement('div');
+        descElement.className = 'collection-description';
+        descElement.textContent = collection.description;
+        infoDiv.appendChild(descElement);
+      }
+      
+      cardDiv.appendChild(infoDiv);
+      gridDiv.appendChild(cardDiv);
+    });
+    
+    el.appendChild(gridDiv);
+  }
+
+  renderCollectionsTable(el, collections) {
+    const table = document.createElement('table');
+    table.className = 'raindrop-table';
+    
+    // Create header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    const headers = ['Title', 'Count', 'Description'];
+    headers.forEach(headerText => {
+      const th = document.createElement('th');
+      th.textContent = headerText;
+      headerRow.appendChild(th);
+    });
+    
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    
+    // Create body
+    const tbody = document.createElement('tbody');
+    
+    collections.forEach(collection => {
+      const row = document.createElement('tr');
+      
+      const titleCell = document.createElement('td');
+      titleCell.textContent = collection.title;
+      row.appendChild(titleCell);
+      
+      const countCell = document.createElement('td');
+      countCell.textContent = collection.count;
+      row.appendChild(countCell);
+      
+      const descCell = document.createElement('td');
+      descCell.textContent = collection.description || '-';
+      row.appendChild(descCell);
+      
+      tbody.appendChild(row);
+    });
+    
+    table.appendChild(tbody);
+    el.appendChild(table);
+  }
+
+  renderUserInfo(el, user) {
+    const userDiv = document.createElement('div');
+    userDiv.className = 'raindrop-user-info';
+    
+    const userHtml = `
+      <div class="user-header">
+        <h3>${user.fullName}</h3>
+        <div class="user-email">${user.email}</div>
+      </div>
+      <div class="user-stats">
+        <div class="stat-item">
+          <span class="stat-label">Collections:</span>
+          <span class="stat-value">${user.groups.length}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Plan:</span>
+          <span class="stat-value">${user.pro ? 'Pro' : 'Free'}</span>
+        </div>
+      </div>
+    `;
+    
+    userDiv.innerHTML = userHtml;
+    el.appendChild(userDiv);
+  }
+
+  renderBookmarks(el, bookmarks, config) {
+    if (!bookmarks || bookmarks.length === 0) {
+      el.innerHTML = '<div class="raindrop-empty">No bookmarks found.</div>';
+      return;
+    }
+    
+    if (config.layout === 'table') {
+      this.renderBookmarksTable(el, bookmarks);
+    } else {
+      this.renderBookmarksGrid(el, bookmarks);
+    }
+  }
+
+  renderBookmarksGrid(el, bookmarks) {
+    const gridDiv = document.createElement('div');
+    gridDiv.className = 'raindrop-cards-grid';
+    gridDiv.style.setProperty('--raindrop-grid-columns', this.settings.gridColumns);
+    
+    bookmarks.forEach(bookmark => {
+      const cardDiv = document.createElement('div');
+      cardDiv.className = 'raindrop-bookmark-card';
+      
+      if (this.settings.showCoverImages && bookmark.cover) {
+        const img = document.createElement('img');
+        img.src = bookmark.cover;
+        img.alt = bookmark.title;
+        img.className = 'bookmark-cover';
+        cardDiv.appendChild(img);
+      }
+      
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'bookmark-info';
+      
+      // Title as clickable link
+      const titleElement = document.createElement('h4');
+      const titleLink = document.createElement('a');
+      titleLink.href = bookmark.link;
+      titleLink.target = '_blank';
+      titleLink.rel = 'noopener noreferrer';
+      titleLink.className = 'bookmark-title-link';
+      titleLink.textContent = bookmark.title;
+      titleElement.appendChild(titleLink);
+      infoDiv.appendChild(titleElement);
+      
+      // Domain
+      if (this.settings.showDomain && bookmark.domain) {
+        const domainElement = document.createElement('div');
+        domainElement.className = 'bookmark-domain';
+        domainElement.textContent = bookmark.domain;
+        infoDiv.appendChild(domainElement);
+      }
+      
+      // Excerpt
+      if (this.settings.showExcerpts && bookmark.excerpt) {
+        const excerptElement = document.createElement('div');
+        excerptElement.className = 'bookmark-excerpt';
+        excerptElement.textContent = bookmark.excerpt;
+        infoDiv.appendChild(excerptElement);
+      }
+      
+      // Tags
+      if (this.settings.showTags && bookmark.tags && bookmark.tags.length > 0) {
+        const tagsDiv = document.createElement('div');
+        tagsDiv.className = 'bookmark-tags';
+        bookmark.tags.forEach(tag => {
+          const tagElement = document.createElement('span');
+          tagElement.className = 'bookmark-tag';
+          tagElement.textContent = tag;
+          tagsDiv.appendChild(tagElement);
+        });
+        infoDiv.appendChild(tagsDiv);
+      }
+      
+      // Date
+      const dateElement = document.createElement('div');
+      dateElement.className = 'bookmark-date';
+      dateElement.textContent = new Date(bookmark.created).toLocaleDateString();
+      infoDiv.appendChild(dateElement);
+      
+      cardDiv.appendChild(infoDiv);
+      gridDiv.appendChild(cardDiv);
+    });
+    
+    el.appendChild(gridDiv);
+  }
+
+  renderBookmarksTable(el, bookmarks) {
+    const table = document.createElement('table');
+    table.className = 'raindrop-table';
+    
+    // Create header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    const headers = ['Title', 'Domain', 'Tags', 'Date'];
+    headers.forEach(headerText => {
+      const th = document.createElement('th');
+      th.textContent = headerText;
+      headerRow.appendChild(th);
+    });
+    
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    
+    // Create body
+    const tbody = document.createElement('tbody');
+    
+    bookmarks.forEach(bookmark => {
+      const row = document.createElement('tr');
+      
+      // Title cell
+      const titleCell = document.createElement('td');
+      const titleLink = document.createElement('a');
+      titleLink.href = bookmark.link;
+      titleLink.target = '_blank';
+      titleLink.rel = 'noopener noreferrer';
+      titleLink.className = 'bookmark-title-link';
+      titleLink.textContent = bookmark.title;
+      titleCell.appendChild(titleLink);
+      row.appendChild(titleCell);
+      
+      // Domain cell
+      const domainCell = document.createElement('td');
+      domainCell.textContent = bookmark.domain || '-';
+      row.appendChild(domainCell);
+      
+      // Tags cell
+      const tagsCell = document.createElement('td');
+      if (bookmark.tags && bookmark.tags.length > 0) {
+        const tagsDiv = document.createElement('div');
+        tagsDiv.className = 'bookmark-tags-table';
+        bookmark.tags.slice(0, 3).forEach(tag => {
+          const tagElement = document.createElement('span');
+          tagElement.className = 'bookmark-tag';
+          tagElement.textContent = tag;
+          tagsDiv.appendChild(tagElement);
+        });
+        tagsCell.appendChild(tagsDiv);
+      } else {
+        tagsCell.textContent = '-';
+      }
+      row.appendChild(tagsCell);
+      
+      // Date cell
+      const dateCell = document.createElement('td');
+      dateCell.textContent = new Date(bookmark.created).toLocaleDateString();
+      row.appendChild(dateCell);
+      
+      tbody.appendChild(row);
+    });
+    
+    table.appendChild(tbody);
+    el.appendChild(table);
+  }
+
+  renderError(el, message) {
+    el.innerHTML = `<div class="raindrop-error">Error: ${message}</div>`;
+  }
+
+  onunload() {
+    console.log('Unloading Raindrop.io Plugin');
+  }
+}
+
+class RaindropSettingTab extends PluginSettingTab {
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    
+    containerEl.createEl('h2', { text: 'Raindrop.io Integration Settings' });
+    
+    // API Token setting
+    new Setting(containerEl)
+      .setName('API Token')
+      .setDesc('Your Raindrop.io API token. Get it from https://app.raindrop.io/settings/integrations')
+      .addText(text => text
+        .setPlaceholder('Enter your API token')
+        .setValue(this.plugin.settings.apiToken)
+        .onChange(async (value) => {
+          this.plugin.settings.apiToken = value;
+          await this.plugin.saveSettings();
+        }));
+    
+    // Default Layout setting
+    new Setting(containerEl)
+      .setName('Default Layout')
+      .setDesc('Choose the default layout for bookmark lists')
+      .addDropdown(dropdown => dropdown
+        .addOption('card', 'Card Layout')
+        .addOption('table', 'Table Layout')
+        .setValue(this.plugin.settings.defaultLayout)
+        .onChange(async (value) => {
+          this.plugin.settings.defaultLayout = value;
+          await this.plugin.saveSettings();
+        }));
+    
+    // Grid Columns setting
+    new Setting(containerEl)
+      .setName('Grid Columns')
+      .setDesc('Number of columns in card grid layout')
+      .addSlider(slider => slider
+        .setLimits(1, 4, 1)
+        .setValue(this.plugin.settings.gridColumns)
+        .setDynamicTooltip()
+        .onChange(async (value) => {
+          this.plugin.settings.gridColumns = value;
+          await this.plugin.saveSettings();
+        }));
+    
+    // Show Cover Images setting
+    new Setting(containerEl)
+      .setName('Show Cover Images')
+      .setDesc('Display cover images for bookmarks')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.showCoverImages)
+        .onChange(async (value) => {
+          this.plugin.settings.showCoverImages = value;
+          await this.plugin.saveSettings();
+        }));
+    
+    // Show Tags setting
+    new Setting(containerEl)
+      .setName('Show Tags')
+      .setDesc('Display bookmark tags')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.showTags)
+        .onChange(async (value) => {
+          this.plugin.settings.showTags = value;
+          await this.plugin.saveSettings();
+        }));
+    
+    // Show Excerpts setting
+    new Setting(containerEl)
+      .setName('Show Excerpts')
+      .setDesc('Display bookmark excerpts/descriptions')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.showExcerpts)
+        .onChange(async (value) => {
+          this.plugin.settings.showExcerpts = value;
+          await this.plugin.saveSettings();
+        }));
+    
+    // Show Domain setting
+    new Setting(containerEl)
+      .setName('Show Domain')
+      .setDesc('Display bookmark domains')
+      .addToggle(toggle => toggle
+        .setValue(this.plugin.settings.showDomain)
+        .onChange(async (value) => {
+          this.plugin.settings.showDomain = value;
+          await this.plugin.saveSettings();
+        }));
+    
+    // Items Per Page setting
+    new Setting(containerEl)
+      .setName('Items Per Page')
+      .setDesc('Number of items to load per page')
+      .addSlider(slider => slider
+        .setLimits(5, 50, 5)
+        .setValue(this.plugin.settings.itemsPerPage)
+        .setDynamicTooltip()
+        .onChange(async (value) => {
+          this.plugin.settings.itemsPerPage = value;
+          await this.plugin.saveSettings();
+        }));
+    
+    // API Instructions
+    const apiInstructions = containerEl.createEl('div', { cls: 'setting-item-description' });
+    apiInstructions.innerHTML = `
+      <h3>Getting your API Token:</h3>
+      <ol>
+        <li>Go to <a href="https://app.raindrop.io/settings/integrations" target="_blank">Raindrop.io Integrations</a></li>
+        <li>Click "Create new app"</li>
+        <li>Fill in any name (e.g., "Obsidian Integration")</li>
+        <li>Copy the "Test token" that appears</li>
+        <li>Paste it in the API Token field above</li>
+      </ol>
+    `;
+  }
+}
+
+module.exports = RaindropPlugin;
