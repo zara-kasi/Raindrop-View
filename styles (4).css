@@ -1,0 +1,189 @@
+/* Raindrop.io Obsidian Plugin Styles */
+
+/* Container for all outputs */
+.raindrop-container {
+  margin: 1em 0;
+  font-family: var(--font-family);
+  color: var(--text-normal);
+}
+
+/* Grid layout for cards */
+.raindrop-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--raindrop-grid-columns, 2), 1fr);
+  gap: 1em;
+  align-items: start;
+}
+
+/* Collection & Bookmark Cards */
+.raindrop-collection-card,
+.raindrop-bookmark-card {
+  background: var(--background-primary-alt);
+  border: 1px solid var(--interactive-normal);
+  border-radius: 0.5em;
+  box-shadow: var(--shadow-elevation-medium);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cover images */
+.collection-cover,
+.bookmark-cover {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* Info section inside cards */
+.collection-info,
+.bookmark-info {
+  padding: 0.75em;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Title styles */
+h4 {
+  margin: 0 0 0.5em;
+  font-size: var(--font-small-plus);
+  font-weight: var(--font-bold);
+}
+
+/* Bookmark title link */
+.bookmark-title-link {
+  color: var(--interactive-normal);
+  text-decoration: none;
+}
+.bookmark-title-link:hover {
+  color: var(--interactive-accent);
+}
+
+/* Domain label */
+.bookmark-domain {
+  font-size: var(--font-tiny);
+  color: var(--text-muted);
+  margin-bottom: 0.5em;
+}
+
+/* Excerpt text */
+.bookmark-excerpt {
+  font-size: var(--font-smaller);
+  margin-bottom: 0.5em;
+}
+
+/* Tags */
+.bookmark-tags,
+.bookmark-tags-table {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em;
+  margin: 0.5em 0;
+}
+.bookmark-tag {
+  background: var(--background-secondary-alt);
+  color: var(--interactive-normal);
+  padding: 0.2em 0.5em;
+  border-radius: 0.25em;
+  font-size: var(--font-tiny);
+}
+
+/* Date */
+.bookmark-date {
+  font-size: var(--font-small);
+  color: var(--text-muted);
+  margin-top: auto;
+}
+
+/* Collection count & description */
+.collection-count {
+  font-size: var(--font-small);
+  color: var(--text-muted);
+  margin-bottom: 0.5em;
+}
+.collection-description {
+  font-size: var(--font-small);
+  color: var(--text-normal);
+}
+
+/* Table layouts for collections & bookmarks */
+.raindrop-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+.raindrop-table th,
+.raindrop-table td {
+  border: 1px solid var(--interactive-normal);
+  padding: 0.5em;
+  text-align: left;
+  font-size: var(--font-small);
+}
+.raindrop-table th {
+  background: var(--background-secondary-alt);
+  font-weight: var(--font-medium);
+}
+
+/* User Info Panel */
+.raindrop-user-info {
+  background: var(--background-primary-alt);
+  border: 1px solid var(--interactive-normal);
+  border-radius: 0.5em;
+  padding: 1em;
+}
+.user-header h3 {
+  margin: 0;
+  font-size: var(--font-medium-plus);
+}
+.user-email {
+  font-size: var(--font-small);
+  color: var(--text-muted);
+}
+.user-stats {
+  display: flex;
+  gap: 1.5em;
+  margin-top: 1em;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+}
+.stat-label {
+  font-size: var(--font-small);
+  color: var(--text-muted);
+}
+.stat-value {
+  font-size: var(--font-medium);
+  font-weight: var(--font-bold);
+}
+
+/* Search Interface */
+.raindrop-search-container {
+  margin: 1em 0;
+}
+.raindrop-search-input-container {
+  margin-bottom: 0.5em;
+}
+.raindrop-search-input {
+  width: 100%;
+  padding: 0.5em;
+  font-size: var(--font-small);
+  border: 1px solid var(--interactive-normal);
+  border-radius: 0.25em;
+}
+.raindrop-search-results {
+  min-height: 4em;
+}
+.raindrop-search-message,
+.raindrop-search-loading {
+  font-size: var(--font-small);
+  color: var(--text-muted);
+}
+
+/* Error state */
+.raindrop-error {
+  color: var(--text-danger);
+  font-weight: var(--font-bold);
+  padding: 0.5em;
+}
