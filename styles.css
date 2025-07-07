@@ -1,224 +1,397 @@
-/* Raindrop.io Obsidian Plugin Styles */
+/* Enhanced Raindrop.io Obsidian Plugin Styles */
+/* Inspired by AniList plugin design patterns */
 
-/* Container for all outputs */
+/* ─── Container Styles ─── */
 .raindrop-container {
-  margin: 1em 0;
-  font-family: var(--font-family);
-  color: var(--text-normal);
+  margin: 1rem 0;
+  padding: 0 0.1rem;
+  font-family: var(--font-interface);
 }
 
-/* Grid layout for cards */
+/* ─── Error Styles ─── */
+.raindrop-error {
+  color: var(--text-error);
+  background: var(--background-modifier-error);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  margin: 1rem 0;
+}
+
+/* ─── Card Layout Styles ─── */
+/* 2-column grid with better spacing */
 .raindrop-cards-grid {
   display: grid;
-  grid-template-columns: repeat(var(--raindrop-grid-columns, 2), 1fr);
-  gap: 1em;
-  align-items: start;
+  grid-template-columns: repeat(var(--raindrop-grid-columns, 2), minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
 }
 
-/* Collection & Bookmark Cards */
+@media (max-width: 480px) {
+  .raindrop-cards-grid {
+    gap: 0.75rem;
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Enhanced Card Styles */
 .raindrop-collection-card,
 .raindrop-bookmark-card {
-  background: var(--background-primary-alt);
-  border: 1px solid var(--interactive-normal);
-  border-radius: 0.5em;
-  box-shadow: var(--shadow-elevation-medium);
-  overflow: hidden;
+  background: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-/* Cover images */
+/* Hover effects */
+.raindrop-collection-card:hover,
+.raindrop-bookmark-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Cover images with consistent aspect ratio */
 .collection-cover,
 .bookmark-cover {
   width: 100%;
-  height: auto;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
-/* Info section inside cards */
+/* Info sections with tighter spacing */
 .collection-info,
 .bookmark-info {
-  padding: 0.75em;
+  padding: 0.5rem 0.75rem;
   display: flex;
   flex-direction: column;
+  gap: 0.3rem;
   flex: 1;
 }
 
-/* Title styles */
-h4 {
-  margin: 0 0 0.5em;
-  font-size: var(--font-small-plus);
-  font-weight: var(--font-bold);
+/* ─── Typography Styles ─── */
+/* Collection and bookmark titles */
+.raindrop-collection-card h4,
+.raindrop-bookmark-card h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-normal);
+  line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Bookmark title link */
+/* Bookmark title links */
 .bookmark-title-link {
-  color: var(--interactive-normal);
+  color: var(--text-accent);
   text-decoration: none;
-}
-.bookmark-title-link:hover {
-  color: var(--interactive-accent);
+  font-weight: 600;
 }
 
-/* Domain label */
-.bookmark-domain {
-  font-size: var(--font-tiny);
+.bookmark-title-link:hover {
+  color: var(--text-accent-hover);
+}
+
+/* Domain and date labels */
+.bookmark-domain,
+.bookmark-date {
+  font-size: 0.75rem;
   color: var(--text-muted);
-  margin-bottom: 0.5em;
+  font-weight: 500;
 }
 
 /* Excerpt text */
 .bookmark-excerpt {
-  font-size: var(--font-smaller);
-  margin-bottom: 0.5em;
+  font-size: 0.8rem;
+  color: var(--text-normal);
+  line-height: 1.4;
+  margin: 0.2rem 0;
 }
 
-/* Tags */
+/* Collection count and description */
+.collection-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.collection-description {
+  font-size: 0.8rem;
+  color: var(--text-normal);
+  line-height: 1.4;
+}
+
+/* ─── Badge and Tag Styles ─── */
+/* Tags container */
 .bookmark-tags,
 .bookmark-tags-table {
   display: flex;
+  gap: 0.2rem;
   flex-wrap: wrap;
-  gap: 0.25em;
-  margin: 0.5em 0;
+  margin-top: 0.3rem;
 }
+
+/* Individual tag badges */
 .bookmark-tag {
-  background: var(--background-secondary-alt);
-  color: var(--interactive-normal);
-  padding: 0.2em 0.5em;
-  border-radius: 0.25em;
-  font-size: var(--font-tiny);
-}
-
-/* Date */
-.bookmark-date {
-  font-size: var(--font-small);
+  background: var(--background-modifier-hover);
   color: var(--text-muted);
-  margin-top: auto;
+  padding: 0.1rem 0.3rem;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1px;
 }
 
-/* Collection count & description */
-.collection-count {
-  font-size: var(--font-small);
-  color: var(--text-muted);
-  margin-bottom: 0.5em;
-}
-.collection-description {
-  font-size: var(--font-small);
-  color: var(--text-normal);
-}
-
-/* Table layouts for collections & bookmarks */
+/* ─── Table Layout Styles ─── */
 .raindrop-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1em 0;
-}
-.raindrop-table th,
-.raindrop-table td {
-  border: 1px solid var(--interactive-normal);
-  padding: 0.5em;
-  text-align: left;
-  font-size: var(--font-small);
-}
-.raindrop-table th {
-  background: var(--background-secondary-alt);
-  font-weight: var(--font-medium);
+  margin: 1rem 0;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-/* User Info Panel */
-.raindrop-user-info {
-  background: var(--background-primary-alt);
-  border: 1px solid var(--interactive-normal);
-  border-radius: 0.5em;
-  padding: 1em;
+.raindrop-table th {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
 }
+
+.raindrop-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-normal);
+}
+
+.raindrop-table tr:hover {
+  background: var(--background-modifier-hover);
+}
+
+/* ─── User Info Panel Styles ─── */
+.raindrop-user-info {
+  background: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
+.user-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
 .user-header h3 {
   margin: 0;
-  font-size: var(--font-medium-plus);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-normal);
 }
+
 .user-email {
-  font-size: var(--font-small);
+  font-size: 0.85rem;
   color: var(--text-muted);
 }
+
 .user-stats {
   display: flex;
-  gap: 1.5em;
-  margin-top: 1em;
+  gap: 1.5rem;
+  margin-top: 1rem;
 }
+
 .stat-item {
   display: flex;
   flex-direction: column;
 }
+
 .stat-label {
-  font-size: var(--font-small);
+  font-size: 0.75rem;
   color: var(--text-muted);
-}
-.stat-value {
-  font-size: var(--font-medium);
-  font-weight: var(--font-bold);
+  font-weight: 500;
 }
 
-/* Search Interface */
+.stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+/* ─── Search Interface Styles ─── */
 .raindrop-search-container {
-  margin: 1em 0;
+  margin: 1rem 0;
 }
+
 .raindrop-search-input-container {
-  margin-bottom: 0.5em;
+  margin-bottom: 0.5rem;
 }
+
 .raindrop-search-input {
   width: 100%;
-  padding: 0.5em;
-  font-size: var(--font-small);
-  border: 1px solid var(--interactive-normal);
-  border-radius: 0.25em;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  transition: border-color 0.2s ease;
 }
+
+.raindrop-search-input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+}
+
 .raindrop-search-results {
-  min-height: 4em;
+  min-height: 4rem;
 }
+
 .raindrop-search-message,
 .raindrop-search-loading {
-  font-size: var(--font-small);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 1rem;
+  text-align: center;
+}
+
+/* ─── Mobile Responsive Adjustments ─── */
+@media (max-width: 480px) {
+  .raindrop-collection-card,
+  .raindrop-bookmark-card {
+    text-align: center;
+  }
+  
+  .collection-info,
+  .bookmark-info {
+    padding: 0.75rem;
+  }
+  
+  .user-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/* ─── Dark Mode Support ─── */
+.theme-dark .raindrop-collection-card,
+.theme-dark .raindrop-bookmark-card,
+.theme-dark .raindrop-user-info {
+  background: var(--background-secondary);
+  border-color: var(--border-color);
+}
+
+.theme-dark .raindrop-table {
+  background: var(--background-secondary);
+}
+
+.theme-dark .raindrop-search-input {
+  background: var(--background-primary);
+  border-color: var(--border-color);
+}
+
+/* ─── Animation Effects ─── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.raindrop-container > * {
+  animation: fadeIn 0.3s ease;
+}
+
+/* ─── Enhanced Visual Hierarchy ─── */
+/* Status indicators for different bookmark states */
+.bookmark-status {
+  padding: 0.1rem 0.4rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1px;
+}
+
+.status-favorite { background: var(--color-red); color: white; }
+.status-archived { background: var(--color-blue); color: white; }
+.status-public { background: var(--color-green); color: white; }
+.status-private { background: var(--color-yellow); color: var(--text-normal); }
+
+/* Progress indicators */
+.collection-progress {
+  padding: 0.1rem 0.2rem;
+  background: var(--background-modifier-border);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-orange);
+}
+
+/* ─── Accessibility Enhancements ─── */
+.raindrop-collection-card:focus,
+.raindrop-bookmark-card:focus {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+/* ─── Loading States ─── */
+.raindrop-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
   color: var(--text-muted);
 }
 
-/* Error state */
-.raindrop-error {
-  color: var(--text-danger);
-  font-weight: var(--font-bold);
-  padding: 0.5em;
-}
-/* Enhanced contrast fixes - Add these at the end */
-.raindrop-collection-card,
-.raindrop-bookmark-card {
-  background: var(--background-primary) !important;
-  border: 1px solid var(--background-modifier-border) !important;
+.raindrop-loading::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--background-modifier-border);
+  border-top: 2px solid var(--interactive-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 0.5rem;
 }
 
-.collection-info,
-.bookmark-info {
-  background: var(--background-primary) !important;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.bookmark-title-link {
-  color: var(--text-accent) !important;
-  font-weight: var(--font-medium) !important;
+/* ─── Additional Utility Classes ─── */
+.raindrop-hidden {
+  display: none;
 }
 
-.bookmark-excerpt {
-  color: var(--text-normal) !important;
-  line-height: 1.4 !important;
+.raindrop-fade-out {
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
 }
 
-.bookmark-tag {
-  background: var(--interactive-normal) !important;
-  color: var(--text-on-accent) !important;
-  font-weight: var(--font-medium) !important;
-}
-
-.bookmark-domain,
-.bookmark-date {
-  font-weight: var(--font-medium) !important;
+.raindrop-highlight {
+  background: var(--background-modifier-hover);
+  border-radius: 4px;
+  padding: 0.1rem 0.2rem;
 }
