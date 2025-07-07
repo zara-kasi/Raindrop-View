@@ -22,7 +22,7 @@
 /* 2-column grid with better spacing */
 .raindrop-cards-grid {
   display: grid;
-  grid-template-columns: repeat(var(--raindrop-grid-columns, 2), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--raindrop-grid-columns, 2), minmax(250px, 1fr));
   gap: 1rem;
   margin: 1rem 0;
   padding: 0;
@@ -394,4 +394,20 @@
   background: var(--background-modifier-hover);
   border-radius: 4px;
   padding: 0.1rem 0.2rem;
+}
+
+.raindrop-cards-grid[data-columns="1"] {
+  grid-template-columns: 1fr;
+}
+
+.raindrop-cards-grid[data-columns="2"] {
+  grid-template-columns: repeat(2, minmax(250px, 1fr));
+}
+
+.raindrop-cards-grid[data-columns="3"] {
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
+}
+
+.raindrop-cards-grid[data-columns="4"] {
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
 }
