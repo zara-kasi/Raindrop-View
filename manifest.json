@@ -1,11 +1,11 @@
 {
   "id": "raindrop-integration",
-  "name": "Raindrop-View",
+  "name": "Raindrop View",
   "version": "1.0.0",
   "minAppVersion": "0.15.0",
   "description": "Integrate Raindrop.io bookmarks into Obsidian with code blocks and inline links",
   "author": "zara-kasi",
-  "authorUrl": "",
+  "authorUrl": "https://github.com/zara-kasi",
   "fundingUrl": "",
   "isDesktopOnly": false
 }
