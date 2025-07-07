@@ -1,13 +1,14 @@
 const { Plugin, PluginSettingTab, Setting, Notice } = require('obsidian');
 
 class RaindropPlugin extends Plugin {
-  constructor() {
-    super(...arguments);
-    this.cache = new Map();
-    this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
-  }
+constructor(app, manifest) {
+  super(app, manifest);
+  this.cache = new Map();
+  this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+}
 
-  async onload() {
+async onload() {
+  try {
     console.log('Loading Raindrop.io Plugin');
     
     // Load settings first
@@ -22,7 +23,13 @@ class RaindropPlugin extends Plugin {
     
     // Add plugin settings
     this.addSettingTab(new RaindropSettingTab(this.app, this));
+    
+    console.log('Raindrop.io Plugin loaded successfully');
+  } catch (error) {
+    console.error('Failed to load Raindrop.io Plugin:', error);
+    throw error;
   }
+}
 
   async loadSettings() {
     this.settings = Object.assign({}, {
