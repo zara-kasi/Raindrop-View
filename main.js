@@ -6,6 +6,10 @@ constructor(app, manifest) {
   this.cache = new Map();
   this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
 }
+refreshActiveViews() {
+  // Force re-render of any active raindrop blocks
+  this.app.workspace.trigger('resize');
+}
 
 async onload() {
   try {
@@ -44,9 +48,10 @@ async onload() {
     }, await this.loadData());
   }
 
-  async saveSettings() {
-    await this.saveData(this.settings);
-  }
+async saveSettings() {
+  await this.saveData(this.settings);
+  this.refreshActiveViews();
+}
 
   async processRaindropCodeBlock(source, el, ctx) {
     try {
@@ -301,8 +306,9 @@ async onload() {
 
   renderCollectionsGrid(el, collections) {
     const gridDiv = document.createElement('div');
-    gridDiv.className = 'raindrop-cards-grid';
-    gridDiv.style.setProperty('--raindrop-grid-columns', this.settings.gridColumns);
+gridDiv.className = 'raindrop-cards-grid';
+gridDiv.style.setProperty('--raindrop-grid-columns', this.settings.gridColumns);
+gridDiv.setAttribute('data-columns', this.settings.gridColumns);
     
     collections.forEach(collection => {
       const cardDiv = document.createElement('div');
@@ -425,8 +431,9 @@ async onload() {
 
   renderBookmarksGrid(el, bookmarks) {
     const gridDiv = document.createElement('div');
-    gridDiv.className = 'raindrop-cards-grid';
-    gridDiv.style.setProperty('--raindrop-grid-columns', this.settings.gridColumns);
+gridDiv.className = 'raindrop-cards-grid';
+gridDiv.style.setProperty('--raindrop-grid-columns', this.settings.gridColumns);
+gridDiv.setAttribute('data-columns', this.settings.gridColumns);
     
     bookmarks.forEach(bookmark => {
       const cardDiv = document.createElement('div');
