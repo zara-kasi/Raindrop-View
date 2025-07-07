@@ -190,3 +190,35 @@ h4 {
   font-weight: var(--font-bold);
   padding: 0.5em;
 }
+/* Enhanced contrast fixes - Add these at the end */
+.raindrop-collection-card,
+.raindrop-bookmark-card {
+  background: var(--background-primary) !important;
+  border: 1px solid var(--background-modifier-border) !important;
+}
+
+.collection-info,
+.bookmark-info {
+  background: var(--background-primary) !important;
+}
+
+.bookmark-title-link {
+  color: var(--text-accent) !important;
+  font-weight: var(--font-medium) !important;
+}
+
+.bookmark-excerpt {
+  color: var(--text-normal) !important;
+  line-height: 1.4 !important;
+}
+
+.bookmark-tag {
+  background: var(--interactive-normal) !important;
+  color: var(--text-on-accent) !important;
+  font-weight: var(--font-medium) !important;
+}
+
+.bookmark-domain,
+.bookmark-date {
+  font-weight: var(--font-medium) !important;
+}
