@@ -49,6 +49,9 @@ h4 {
   margin: 0 0 0.5em;
   font-size: var(--font-small-plus);
   font-weight: var(--font-bold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Bookmark title link */
