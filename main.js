@@ -689,4 +689,6 @@ class RaindropSettingTab extends PluginSettingTab {
   }
 }
 
-module.exports = RaindropPlugin;
+module.exports = {
+  default: RaindropPlugin
+};
