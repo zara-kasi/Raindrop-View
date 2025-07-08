@@ -226,83 +226,17 @@ renderSearchInterface(el, config) {
   el.empty();
   el.className = 'raindrop-search-container';
   
-  // Create search header
-  const headerDiv = document.createElement('div');
-  headerDiv.className = 'raindrop-search-header';
-  
-  const title = document.createElement('h3');
-  title.textContent = 'Search Raindrop Bookmarks';
-  title.className = 'raindrop-search-title';
-  headerDiv.appendChild(title);
-  
-  // Create search controls container
-  const controlsDiv = document.createElement('div');
-  controlsDiv.className = 'raindrop-search-controls';
-  
-  // Search input container
-  const searchInputDiv = document.createElement('div');
-  searchInputDiv.className = 'raindrop-search-input-container';
-  
+  // Create minimal search input
   const searchInput = document.createElement('input');
   searchInput.type = 'text';
   searchInput.className = 'raindrop-search-input';
   searchInput.placeholder = 'Search bookmarks...';
   
-  // Search button
-  const searchButton = document.createElement('button');
-  searchButton.textContent = 'Search';
-  searchButton.className = 'raindrop-search-button';
-  
-  // Clear button
-  const clearButton = document.createElement('button');
-  clearButton.textContent = 'Clear';
-  clearButton.className = 'raindrop-clear-button';
-  
-  searchInputDiv.appendChild(searchInput);
-  searchInputDiv.appendChild(searchButton);
-  searchInputDiv.appendChild(clearButton);
-  
-  // Layout toggle
-  const layoutDiv = document.createElement('div');
-  layoutDiv.className = 'raindrop-layout-toggle';
-  
-  const layoutLabel = document.createElement('label');
-  layoutLabel.textContent = 'Layout: ';
-  
-  const layoutSelect = document.createElement('select');
-  layoutSelect.className = 'raindrop-layout-select';
-  
-  const cardOption = document.createElement('option');
-  cardOption.value = 'card';
-  cardOption.textContent = 'Card';
-  cardOption.selected = config.layout === 'card';
-  
-  const tableOption = document.createElement('option');
-  tableOption.value = 'table';
-  tableOption.textContent = 'Table';
-  tableOption.selected = config.layout === 'table';
-  
-  layoutSelect.appendChild(cardOption);
-  layoutSelect.appendChild(tableOption);
-  layoutDiv.appendChild(layoutLabel);
-  layoutDiv.appendChild(layoutSelect);
-  
-  controlsDiv.appendChild(searchInputDiv);
-  controlsDiv.appendChild(layoutDiv);
-  
-  el.appendChild(headerDiv);
-  el.appendChild(controlsDiv);
+  el.appendChild(searchInput);
   
   // Create results container
   const resultsDiv = document.createElement('div');
   resultsDiv.className = 'raindrop-search-results';
-  
-  // Create results info
-  const resultsInfo = document.createElement('div');
-  resultsInfo.className = 'raindrop-search-info';
-  resultsInfo.style.display = 'none';
-  
-  el.appendChild(resultsInfo);
   el.appendChild(resultsDiv);
   
   // State management
@@ -320,8 +254,7 @@ renderSearchInterface(el, config) {
     const query = searchTerm !== null ? searchTerm : searchInput.value.trim();
     
     if (query.length < 2) {
-      resultsDiv.innerHTML = '<div class="raindrop-search-message">Type at least 2 characters to search...</div>';
-      resultsInfo.style.display = 'none';
+      resultsDiv.innerHTML = '';
       return;
     }
     
@@ -333,7 +266,6 @@ renderSearchInterface(el, config) {
       if (resetResults) {
         resultsDiv.innerHTML = '<div class="raindrop-search-loading">Searching...</div>';
       } else {
-        // Show loading for pagination
         const loadingDiv = document.createElement('div');
         loadingDiv.className = 'raindrop-search-loading';
         loadingDiv.textContent = 'Loading more...';
@@ -345,8 +277,7 @@ renderSearchInterface(el, config) {
         type: 'search',
         search: query,
         page: page,
-        perpage: config.perpage || this.settings.itemsPerPage,
-        layout: layoutSelect.value
+        perpage: config.perpage || this.settings.itemsPerPage
       };
       
       const data = await this.fetchRaindropData(searchConfig);
@@ -354,12 +285,7 @@ renderSearchInterface(el, config) {
       if (resetResults) {
         resultsDiv.innerHTML = '';
         totalResults = data.count || 0;
-        
-        // Update results info
-        resultsInfo.innerHTML = `Found ${totalResults} result${totalResults !== 1 ? 's' : ''} for "${query}"`;
-        resultsInfo.style.display = 'block';
       } else {
-        // Remove loading indicator
         const loadingEl = resultsDiv.querySelector('.raindrop-search-loading');
         if (loadingEl) loadingEl.remove();
       }
@@ -368,14 +294,11 @@ renderSearchInterface(el, config) {
         if (resetResults) {
           this.renderBookmarks(resultsDiv, data.items, searchConfig);
         } else {
-          // Append new results
           const tempDiv = document.createElement('div');
           this.renderBookmarks(tempDiv, data.items, searchConfig);
           
-          // Move children from temp div to results div
           while (tempDiv.firstChild) {
             if (tempDiv.firstChild.className === 'raindrop-cards-grid') {
-              // For grid layout, append cards to existing grid
               const existingGrid = resultsDiv.querySelector('.raindrop-cards-grid');
               if (existingGrid) {
                 while (tempDiv.firstChild.firstChild) {
@@ -389,7 +312,6 @@ renderSearchInterface(el, config) {
           }
         }
         
-        // Add load more button if there are more results
         if (data.items.length === (config.perpage || this.settings.itemsPerPage) && 
             (page + 1) * (config.perpage || this.settings.itemsPerPage) < totalResults) {
           const loadMoreBtn = document.createElement('button');
@@ -407,7 +329,6 @@ renderSearchInterface(el, config) {
       
     } catch (error) {
       this.renderError(resultsDiv, error.message);
-      resultsInfo.style.display = 'none';
     } finally {
       isLoading = false;
     }
@@ -425,26 +346,7 @@ renderSearchInterface(el, config) {
       performSearch();
     }
   });
-  
-  searchButton.addEventListener('click', () => {
-    clearTimeout(searchTimeout);
-    performSearch();
-  });
-  
-  clearButton.addEventListener('click', () => {
-    searchInput.value = '';
-    resultsDiv.innerHTML = '';
-    resultsInfo.style.display = 'none';
-    currentSearch = '';
-    currentPage = 0;
-  });
-  
-  layoutSelect.addEventListener('change', () => {
-    if (currentSearch) {
-      performSearch(currentSearch, 0, true);
-    }
-  });
-                }
+}
 
   renderRaindropData(el, data, config) {
     el.empty();
