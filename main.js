@@ -234,6 +234,9 @@ renderSearchInterface(el, config) {
   searchInput.className = 'raindrop-search-input';
   searchInput.placeholder = 'Search Bookmark...';
   
+  // Assemble search wrapper
+  searchWrapper.appendChild(searchInput);
+  el.appendChild(searchWrapper);
   
   // Create results container
   const resultsDiv = document.createElement('div');
