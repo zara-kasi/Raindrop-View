@@ -418,3 +418,144 @@
 .raindrop-cards-grid[data-columns="4"] {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
+
+/* Search Interface Styles */
+.raindrop-search-container {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 8px 0;
+}
+
+.raindrop-search-header {
+  margin-bottom: 16px;
+}
+
+.raindrop-search-title {
+  margin: 0 0 8px 0;
+  color: var(--text-normal);
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.raindrop-search-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.raindrop-search-input-container {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.raindrop-search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 14px;
+}
+
+.raindrop-search-input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+}
+
+.raindrop-search-button,
+.raindrop-clear-button {
+  padding: 8px 16px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.raindrop-search-button:hover,
+.raindrop-clear-button:hover {
+  background: var(--interactive-hover);
+}
+
+.raindrop-search-button:active,
+.raindrop-clear-button:active {
+  background: var(--interactive-active);
+}
+
+.raindrop-layout-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.raindrop-layout-select {
+  padding: 6px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 14px;
+}
+
+.raindrop-search-info {
+  margin-bottom: 12px;
+  padding: 8px;
+  background: var(--background-secondary);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.raindrop-search-results {
+  margin-top: 16px;
+}
+
+.raindrop-search-message,
+.raindrop-search-loading {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.raindrop-load-more-btn {
+  display: block;
+  margin: 16px auto;
+  padding: 10px 20px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.raindrop-load-more-btn:hover {
+  background: var(--interactive-hover);
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .raindrop-search-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .raindrop-search-input-container {
+    min-width: unset;
+  }
+  
+  .raindrop-layout-toggle {
+    justify-content: center;
+  }
+}
