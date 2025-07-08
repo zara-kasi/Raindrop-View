@@ -226,13 +226,30 @@ renderSearchInterface(el, config) {
   el.empty();
   el.className = 'raindrop-search-container';
   
-  // Create minimal search input
+  // Create search wrapper with icon
+  const searchWrapper = document.createElement('div');
+  searchWrapper.className = 'raindrop-search-wrapper';
+  
+  // Create search icon
+  const searchIcon = document.createElement('div');
+  searchIcon.className = 'raindrop-search-icon';
+  searchIcon.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="m21 21-4.35-4.35"></path>
+    </svg>
+  `;
+  
+  // Create search input
   const searchInput = document.createElement('input');
   searchInput.type = 'text';
   searchInput.className = 'raindrop-search-input';
-  searchInput.placeholder = 'Search bookmarks...';
+  searchInput.placeholder = 'Search Bookmark...';
   
-  el.appendChild(searchInput);
+  // Assemble search wrapper
+  searchWrapper.appendChild(searchIcon);
+  searchWrapper.appendChild(searchInput);
+  el.appendChild(searchWrapper);
   
   // Create results container
   const resultsDiv = document.createElement('div');
@@ -346,7 +363,16 @@ renderSearchInterface(el, config) {
       performSearch();
     }
   });
-}
+  
+  // Focus effect
+  searchInput.addEventListener('focus', () => {
+    searchWrapper.classList.add('focused');
+  });
+  
+  searchInput.addEventListener('blur', () => {
+    searchWrapper.classList.remove('focused');
+  });
+      }
 
   renderRaindropData(el, data, config) {
     el.empty();
