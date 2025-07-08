@@ -419,23 +419,153 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-/* tighten up the wrapper */
+/* Raindrop Search Bar Styles */
+
 .raindrop-search-container {
-  margin: 8px 0 !important;      /* cut vertical gutter in half */
+  margin: 1rem 0;
+  width: 100%;
 }
 
-/* slim down the input */
-.raindrop-search-input {
-  padding: 12px 16px !important;   /* small but still tappable */
-  font-size: 14px;
-             /* ensure the box height = one line + padding */
-  min-height: auto !important;   /* kill any plugin-imposed min-height */
-  height: auto !important;       /* let it size to content */
-}
-
-/* if you still see extra white below: force the container to flex-shrink */
-.raindrop-search-container,
-.raindrop-search-input {
+.raindrop-search-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
+
+.raindrop-search-wrapper:hover {
+  border-color: var(--interactive-accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.raindrop-search-wrapper.focused {
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+.raindrop-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  color: var(--text-normal);
+  padding: 0.5rem;
+  font-family: inherit;
+}
+
+.raindrop-search-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.raindrop-search-input:focus {
+  outline: none;
+}
+
+.raindrop-search-results {
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.raindrop-search-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.raindrop-search-loading::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--text-muted);
+  border-top: 2px solid var(--interactive-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.raindrop-search-message {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-style: italic;
+  background: var(--background-modifier-form-field);
+  border-radius: 8px;
+  border: 1px dashed var(--background-modifier-border);
+}
+
+.raindrop-load-more-btn {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.raindrop-load-more-btn:hover {
+  background: var(--interactive-hover);
+  border-color: var(--interactive-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.raindrop-load-more-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode adjustments */
+.theme-dark .raindrop-search-wrapper {
+  background: var(--background-modifier-form-field);
+  border-color: var(--background-modifier-border);
+}
+
+.theme-dark .raindrop-search-wrapper:hover {
+  border-color: var(--interactive-accent);
+}
+
+.theme-dark .raindrop-search-input {
+  color: var(--text-normal);
+}
+
+.theme-dark .raindrop-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .raindrop-search-wrapper {
+    padding: 0.4rem;
+  }
+  
+  .raindrop-search-input {
+    font-size: 0.9rem;
+    padding: 0.4rem;
+  }
+  
+  .raindrop-load-more-btn {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+  }
+    }
