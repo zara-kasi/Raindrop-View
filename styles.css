@@ -419,56 +419,23 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-/* Minimal Search Interface Styles */
+/* tighten up the wrapper */
 .raindrop-search-container {
-  margin: 8px 0;
+  margin: 4px 0 !important;      /* cut vertical gutter in half */
 }
 
+/* slim down the input */
 .raindrop-search-input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
-  background: var(--background-primary);
-  color: var(--text-normal);
+  padding: 6px 8px !important;   /* small but still tappable */
   font-size: 14px;
-  box-sizing: border-box;
+  line-height: 1.2;              /* ensure the box height = one line + padding */
+  min-height: auto !important;   /* kill any plugin-imposed min-height */
+  height: auto !important;       /* let it size to content */
 }
 
-.raindrop-search-input:focus {
-  outline: none;
-  border-color: var(--interactive-accent);
-}
-
-.raindrop-search-input::placeholder {
-  color: var(--text-muted);
-}
-
-.raindrop-search-results {
-  margin-top: 16px;
-}
-
-.raindrop-search-message,
-.raindrop-search-loading {
-  padding: 20px;
-  text-align: center;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.raindrop-load-more-btn {
-  display: block;
-  margin: 16px auto;
-  padding: 10px 20px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 4px;
-  background: var(--interactive-normal);
-  color: var(--text-normal);
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
-}
-
-.raindrop-load-more-btn:hover {
-  background: var(--interactive-hover);
+/* if you still see extra white below: force the container to flex-shrink */
+.raindrop-search-container,
+.raindrop-search-input {
+  display: flex;
+  align-items: center;
 }
