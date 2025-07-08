@@ -174,9 +174,8 @@ async saveSettings() {
       'Content-Type': 'application/json'
     };
     
-    if (config.type === 'collections') {
-      url = 'https://api.raindrop.io/rest/v1/collections';
-// Replace the search section in your fetchRaindropData method with this:
+   if (config.type === 'collections') {
+  url = 'https://api.raindrop.io/rest/v1/collections';
 } else if (config.type === 'search') {
   const searchParams = new URLSearchParams({
     search: config.search || '',
@@ -184,26 +183,25 @@ async saveSettings() {
     perpage: config.perpage || this.settings.itemsPerPage
   });
   
-  // Add additional search parameters if needed
   if (config.collection && config.collection !== '0') {
     url = `https://api.raindrop.io/rest/v1/raindrops/${config.collection}?${searchParams}`;
   } else {
     url = `https://api.raindrop.io/rest/v1/raindrops/0?${searchParams}`;
   }
-    }
-      // Default to bookmarks
-      const collectionId = config.collection || 0;
-      const searchParams = new URLSearchParams({
-        page: config.page || 0,
-        perpage: config.perpage || this.settings.itemsPerPage
-      });
-      
-      if (config.search) {
-        searchParams.append('search', config.search);
-      }
-      
-      url = `https://api.raindrop.io/rest/v1/raindrops/${collectionId}?${searchParams}`;
-    }
+} else {
+  // Default to bookmarks
+  const collectionId = config.collection || 0;
+  const searchParams = new URLSearchParams({
+    page: config.page || 0,
+    perpage: config.perpage || this.settings.itemsPerPage
+  });
+  
+  if (config.search) {
+    searchParams.append('search', config.search);
+  }
+  
+  url = `https://api.raindrop.io/rest/v1/raindrops/${collectionId}?${searchParams}`;
+   }
     
     const response = await fetch(url, { headers });
     
