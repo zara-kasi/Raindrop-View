@@ -226,9 +226,6 @@ renderSearchInterface(el, config) {
   el.empty();
   el.className = 'raindrop-search-container';
   
-  // Create search wrapper with icon
-  const searchWrapper = document.createElement('div');
-  searchWrapper.className = 'raindrop-search-wrapper';
   
   
   // Create search input
