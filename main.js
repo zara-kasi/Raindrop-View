@@ -25,7 +25,7 @@ this.addCommand({
   callback: () => {
     this.generateTagsChart();
   }
-    
+    });
     // Register code block processors
     this.registerMarkdownCodeBlockProcessor('raindrop', this.processRaindropCodeBlock.bind(this));
     this.registerMarkdownCodeBlockProcessor('raindrop-search', this.processRaindropSearchCodeBlock.bind(this));
