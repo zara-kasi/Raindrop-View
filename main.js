@@ -1,4 +1,4 @@
-const { Plugin, PluginSettingTab, Setting, Notice } = require('obsidian');
+const { Plugin, PluginSettingTab, Setting, Notice, MarkdownView } = require('obsidian');
 
 class RaindropPlugin extends Plugin {
 constructor(app, manifest) {
@@ -17,6 +17,14 @@ async onload() {
     
     // Load settings first
     await this.loadSettings();
+    
+// Add command for generating tags chart
+this.addCommand({
+  id: 'generate-tags-chart',
+  name: 'Generate Tags Chart',
+  callback: () => {
+    this.generateTagsChart();
+  }
     
     // Register code block processors
     this.registerMarkdownCodeBlockProcessor('raindrop', this.processRaindropCodeBlock.bind(this));
@@ -41,10 +49,11 @@ async onload() {
       defaultLayout: 'card',
       showCoverImages: true,
       showTags: true,
-      showExcerpts: true,
-      showDomain: true,
-      gridColumns: 2,
+      showExcerpts: false,
+      showDomain: false,
+      gridColumns: 3,
       itemsPerPage: 20
+      autoGenerateChart: false,
     }, await this.loadData());
   }
 
@@ -661,6 +670,148 @@ gridDiv.setAttribute('data-columns', this.settings.gridColumns);
   onunload() {
     console.log('Unloading Raindrop.io Plugin');
   }
+  // Add this method to your RaindropPlugin class
+async generateTagsChart() {
+  try {
+    if (!this.settings.apiToken) {
+      new Notice('API Token is required. Please set it in plugin settings.');
+      return;
+    }
+
+    // Get the active editor
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!activeView) {
+      new Notice('No active markdown view found.');
+      return;
+    }
+
+    const editor = activeView.editor;
+
+    // Show loading notice
+    const loadingNotice = new Notice('Fetching bookmarks and generating chart...', 0);
+
+    // Fetch all bookmarks from all collections
+    const allBookmarks = await this.fetchAllBookmarks();
+
+    if (!allBookmarks || allBookmarks.length === 0) {
+      loadingNotice.hide();
+      new Notice('No bookmarks found.');
+      return;
+    }
+
+    // Build tag frequency map
+    const tagFrequency = this.buildTagFrequencyMap(allBookmarks);
+
+    if (Object.keys(tagFrequency).length === 0) {
+      loadingNotice.hide();
+      new Notice('No tags found in your bookmarks.');
+      return;
+    }
+
+    // Generate chart code block
+    const chartCodeBlock = this.generateChartCodeBlock(tagFrequency);
+
+    // Insert at cursor position
+    editor.replaceSelection(chartCodeBlock);
+
+    loadingNotice.hide();
+    new Notice(`Chart generated with ${Object.keys(tagFrequency).length} tags!`);
+
+  } catch (error) {
+    console.error('Error generating tags chart:', error);
+    new Notice(`Error generating chart: ${error.message}`);
+  }
+}
+
+// Fetch all bookmarks from all collections
+async fetchAllBookmarks() {
+  const allBookmarks = [];
+  let page = 0;
+  const perPage = 50; // Maximum allowed by API
+
+  try {
+    while (true) {
+      const config = {
+        type: 'bookmarks',
+        collection: 0, // 0 = all bookmarks
+        page: page,
+        perpage: perPage
+      };
+
+      const data = await this.fetchRaindropData(config);
+      
+      if (!data.items || data.items.length === 0) {
+        break;
+      }
+
+      allBookmarks.push(...data.items);
+
+      // If we got fewer items than requested, we've reached the end
+      if (data.items.length < perPage) {
+        break;
+      }
+
+      page++;
+    }
+
+    return allBookmarks;
+  } catch (error) {
+    throw new Error(`Failed to fetch bookmarks: ${error.message}`);
+  }
+}
+
+// Build tag frequency map from bookmarks
+buildTagFrequencyMap(bookmarks) {
+  const tagFrequency = {};
+
+  bookmarks.forEach(bookmark => {
+    if (bookmark.tags && Array.isArray(bookmark.tags)) {
+      bookmark.tags.forEach(tag => {
+        if (tag && tag.trim()) {
+          const cleanTag = tag.trim();
+          tagFrequency[cleanTag] = (tagFrequency[cleanTag] || 0) + 1;
+        }
+      });
+    }
+  });
+
+  return tagFrequency;
+}
+
+// Generate chart code block in Obsidian Charts format
+generateChartCodeBlock(tagFrequency) {
+  // Sort tags by frequency (descending)
+  const sortedTags = Object.entries(tagFrequency)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 20); // Limit to top 20 tags for better readability
+
+  if (sortedTags.length === 0) {
+    return '```chart\n# No tags found\n```';
+  }
+
+  const labels = sortedTags.map(([tag]) => tag);
+  const data = sortedTags.map(([, count]) => count);
+
+  // Generate the chart code block
+  const chartConfig = `\`\`\`chart
+type: bar
+labels: ${JSON.stringify(labels)}
+series:
+  - title: Bookmarks per Tag
+    data: ${JSON.stringify(data)}
+indexAxis: y
+beginAtZero: true
+labelColors: true
+stacked: true
+tension: 0.2
+width: 80%
+labelPosition: top
+fill: false
+\`\`\``;
+
+  return chartConfig;
+}
+
 }
 
 class RaindropSettingTab extends PluginSettingTab {
@@ -757,6 +908,7 @@ class RaindropSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
     
+    
     // Items Per Page setting
     new Setting(containerEl)
       .setName('Items Per Page')
@@ -769,6 +921,15 @@ class RaindropSettingTab extends PluginSettingTab {
           this.plugin.settings.itemsPerPage = value;
           await this.plugin.saveSettings();
         }));
+    new Setting(containerEl)
+  .setName('Auto-generate Chart')
+  .setDesc('Automatically generate tags chart when fetching bookmarks')
+  .addToggle(toggle => toggle
+    .setValue(this.plugin.settings.autoGenerateChart)
+    .onChange(async (value) => {
+      this.plugin.settings.autoGenerateChart = value;
+      await this.plugin.saveSettings();
+    }));
     
     // API Instructions
     const apiInstructions = containerEl.createEl('div', { cls: 'setting-item-description' });
