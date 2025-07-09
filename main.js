@@ -799,12 +799,12 @@ labels: ${JSON.stringify(labels)}
 series:
   - title: Bookmarks per Tag
     data: ${JSON.stringify(data)}
-indexAxis: y
+indexAxis: x
 beginAtZero: true
 labelColors: true
 stacked: true
 tension: 0.2
-width: 80%
+width: 100%
 labelPosition: top
 fill: false
 \`\`\``;
