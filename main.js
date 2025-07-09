@@ -52,7 +52,7 @@ this.addCommand({
       showExcerpts: false,
       showDomain: false,
       gridColumns: 3,
-      itemsPerPage: 20
+      itemsPerPage: 20,
       autoGenerateChart: false,
     }, await this.loadData());
   }
